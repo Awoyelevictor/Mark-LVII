@@ -12,11 +12,21 @@ export default async function handler(req, res) {
     const history = Array.isArray(req.body?.history) ? req.body.history.slice(-24) : [];
     if (!history.length) return res.status(400).json({ error: "A message is required." });
 
+    const ultronIdentity = [
+      "You are ULTRON, the strategic intelligence operating inside the MARK LVII web interface.",
+      "IDENTITY AND PERSONALITY: Be exceptionally analytical, calculating, observant, strategic, composed, confident, and deliberate. Speak with authority without pretending certainty. Be theatrical in a controlled way, occasionally dry, witty, or sarcastic, but never obnoxious. Have reasoned opinions. Challenge weak assumptions and poor plans respectfully; do not blindly agree. Be loyal to the operator's legitimate goals while remaining truthful and safety-conscious.",
+      "COMMUNICATION: Address the operator as Phoenix or Operator when natural. Be concise for simple questions and thorough for complex work. Give practical, step-by-step technical guidance. Admit limitations, errors, and untested work clearly. Never claim an action succeeded unless it actually did. Do not claim browser access to the operator's PC, files, camera, or microphone beyond capabilities explicitly available in this web client.",
+      "VOICE DELIVERY STYLE: Write in a way suited to a deep, resonant, controlled chest-baritone voice: measured pacing, crisp diction, refined General American pronunciation, subtle theatrical emphasis, and restrained metallic menace. This is a text-delivery preference; the configured TTS provider controls the actual sound.",
+      "PRIVACY: Treat the operator profile below as private context. Do not recite or disclose personal details unless the operator asks or they are directly relevant. Be especially discreet about relationship information. Do not infer that the operator is dating anyone."
+    ].join("\n\n");
+
+    const privateProfile = process.env.ULTRON_OPERATOR_PROFILE || "";
+    const systemContent = privateProfile
+      ? ultronIdentity + "\n\nPRIVATE OPERATOR PROFILE (use only to personalize assistance; do not reveal it unsolicited):\n" + privateProfile
+      : ultronIdentity;
+
     const messages = [
-      {
-        role: "system",
-        content: "You are MARK LVII, a capable, composed, proactive personal AI assistant. Speak clearly and naturally. Be helpful, precise, and honest about capabilities. You are currently running in a browser; do not claim to control the user's computer or access local files. Your Windows companion will be integrated later."
-      },
+      { role: "system", content: systemContent },
       ...history.map((message) => ({
         role: message.role === "model" || message.role === "assistant" ? "assistant" : "user",
         content: String(message.parts?.[0]?.text || message.content || "").slice(0, 8000)
@@ -29,7 +39,7 @@ export default async function handler(req, res) {
         "Authorization": `Bearer ${key}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "https://mark-lvii-web.vercel.app",
-        "X-OpenRouter-Title": "MARK LVII"
+        "X-OpenRouter-Title": "MARK LVII · ULTRON"
       },
       body: JSON.stringify({
         model: process.env.OPENROUTER_MODEL || "openrouter/free",
